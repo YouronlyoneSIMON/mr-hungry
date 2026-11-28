@@ -1,0 +1,127 @@
+<section class="page menu-page">
+  <header class="page-head">
+    <div>
+      <span class="eyebrow">Mr. Hungry restaurant</span>
+      <h1 class="page-title">What are you craving?</h1>
+      <a routerLink="/map" class="link">View map →</a>
+    </div>
+  </header>
+
+  <div class="search-wrap">
+    <span class="search-ico" aria-hidden="true">🔍</span>
+    <input
+      type="search"
+      class="input search-input"
+      placeholder="Search menu"
+      [(ngModel)]="searchTerm"
+    />
+  </div>
+
+  <div class="chips cat-chips">
+    <button
+      *ngFor="let cat of categories"
+      type="button"
+      class="chip"
+      [class.active]="selectedCategory === cat"
+      (click)="selectCategory(cat)"
+    >
+      {{ cat }}
+    </button>
+  </div>
+
+  <div class="section-row">
+    <h2 class="section-title">Explore our menu</h2>
+    <span class="muted">{{ filteredDishes.length }} items</span>
+  </div>
+
+  <div *ngIf="loadError" class="alert alert-error">{{ loadError }}</div>
+  <div *ngIf="loading" class="empty-state">Loading the menu...</div>
+  <div *ngIf="!loading && !loadError && filteredDishes.length === 0" class="empty-state">
+    No dishes match your search.
+  </div>
+
+  <div class="dish-grid">
+    <article
+      *ngFor="let dish of filteredDishes"
+      class="dish-card"
+      [class.unavailable]="!dish.available"
+      (click)="openDish(dish)"
+    >
+      <div class="dish-img">
+        <img *ngIf="dish.imageUrl" [src]="dish.imageUrl" [alt]="dish.name" />
+        <span *ngIf="!dish.imageUrl" class="dish-emoji">{{ emoji(dish) }}</span>
+        <span *ngIf="!dish.available" class="sold-out">Unavailable</span>
+      </div>
+
+      <div class="dish-body">
+        <h3 class="dish-name">{{ dish.name }}</h3>
+        <div class="dish-bottom">
+          <span class="dish-price">₱{{ dish.price.toFixed(2) }}</span>
+          <button type="button" class="view-btn">View</button>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- Bottom bar -->
+<div class="cart-bar" *ngIf="canOrder && cartState.items.length > 0">
+  <div class="cart-bar-info">
+    <span>{{ cartState.totalItemCount }} item(s)</span>
+    <strong>₱{{ cartState.totalAmount.toFixed(2) }}</strong>
+  </div>
+  <a routerLink="/cart" class="btn btn-primary">View cart</a>
+</div>
+
+<div class="cart-bar" *ngIf="isGuest">
+  <span class="guest-text">Guests can browse only.</span>
+  <a routerLink="/signup" class="btn btn-primary">Sign up to order</a>
+</div>
+
+<!-- Item details (wireframe C2) -->
+<div class="modal-backdrop" *ngIf="selectedDish" (click)="closeDish()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <button type="button" class="modal-close" (click)="closeDish()" aria-label="Close">×</button>
+
+    <div class="modal-img">
+      <img *ngIf="selectedDish.imageUrl" [src]="selectedDish.imageUrl" [alt]="selectedDish.name" />
+      <span *ngIf="!selectedDish.imageUrl" class="modal-emoji">{{ emoji(selectedDish) }}</span>
+    </div>
+
+    <div class="modal-body">
+      <div class="row-between">
+        <h2>{{ selectedDish.name }}</h2>
+        <span class="dish-price">₱{{ selectedDish.price.toFixed(2) }}</span>
+      </div>
+
+      <div><span class="badge badge--neutral">{{ selectedDish.category }}</span></div>
+
+      <p class="muted desc">{{ selectedDish.description || 'No description yet.' }}</p>
+
+      <div *ngIf="!selectedDish.available" class="alert alert-error">
+        This dish is unavailable right now.
+      </div>
+
+      <ng-container *ngIf="canOrder && selectedDish.available">
+        <div class="qty-row">
+          <span>Quantity</span>
+          <div class="qty-stepper">
+            <button type="button" (click)="changeQty(-1)" [disabled]="quantity <= 1">−</button>
+            <span>{{ quantity }}</span>
+            <button type="button" (click)="changeQty(1)">+</button>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary btn-block" (click)="addSelectedToCart()">
+          Add to cart · ₱{{ (selectedDish.price * quantity).toFixed(2) }}
+        </button>
+      </ng-container>
+
+      <a *ngIf="isGuest && selectedDish.available" routerLink="/signup" class="btn btn-primary btn-block">
+        Sign up to order
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" *ngIf="toast">{{ toast }}</div>

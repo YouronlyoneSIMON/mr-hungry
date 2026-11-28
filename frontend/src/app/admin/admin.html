@@ -1,0 +1,389 @@
+<section class="page admin-page">
+  <header class="page-head">
+    <div>
+      <span class="eyebrow">Mr. Hungry • Management Console</span>
+      <h1 class="page-title">Admin Dashboard</h1>
+      <p class="muted">Orders, menu, users, and logs in one place.</p>
+    </div>
+
+    <div class="head-actions">
+      <button type="button" class="btn btn-ghost" (click)="loadAll()" [disabled]="loading">
+        {{ loading ? 'Refreshing...' : '↻ Refresh' }}
+      </button>
+      <a routerLink="/admin/sales" class="btn btn-ghost">Sales</a>
+      <a routerLink="/staff" class="btn btn-primary">Switch to Staff Mode</a>
+    </div>
+  </header>
+
+  <div *ngIf="message" class="alert alert-success flash">
+    <span>{{ message }}</span>
+    <button type="button" class="flash-close" (click)="message = ''" aria-label="Dismiss">×</button>
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-error flash">
+    <span>{{ errorMessage }}</span>
+    <button type="button" class="flash-close" (click)="errorMessage = ''" aria-label="Dismiss">×</button>
+  </div>
+
+  <nav class="tabs">
+    <button
+      *ngFor="let t of tabs"
+      type="button"
+      class="tab"
+      [class.active]="activeTab === t.key"
+      (click)="openTab(t.key)"
+    >
+      {{ t.label }}
+      <span *ngIf="t.key === 'users'" class="pill">{{ users.length }}</span>
+    </button>
+  </nav>
+
+  <!-- OVERVIEW -->
+  <div *ngIf="activeTab === 'overview'">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Completed revenue</span>
+        <strong class="stat-value success">₱{{ completedSalesTotal.toFixed(2) }}</strong>
+        <span class="muted">{{ completedOrdersCount }} completed orders</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Active orders</span>
+        <strong class="stat-value">{{ activeOrdersCount }}</strong>
+        <span class="muted">Received, preparing, or ready</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">GCash to verify</span>
+        <strong class="stat-value accent">{{ pendingGcashCount }}</strong>
+        <span class="muted">Check the reference numbers</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Menu items</span>
+        <strong class="stat-value">{{ menuItems.length }}</strong>
+        <span class="muted">{{ categories.length }} categories</span>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <h3 class="section-title">Manage restaurant</h3>
+        <div class="manage-grid">
+          <button type="button" class="btn btn-outline" (click)="openTab('orders')">Orders →</button>
+          <button type="button" class="btn btn-outline" (click)="openTab('menu')">Menu →</button>
+          <a routerLink="/admin/sales" class="btn btn-outline">Sales →</a>
+          <button type="button" class="btn btn-outline" (click)="openTab('users')">Users →</button>
+        </div>
+        <p class="muted note">Only completed orders count toward revenue.</p>
+      </div>
+
+      <div class="card">
+        <h3 class="section-title">Recent orders</h3>
+        <div *ngIf="recentOrders.length === 0" class="muted">No orders yet.</div>
+        <div *ngFor="let o of recentOrders" class="recent-row" (click)="openTab('orders'); selectOrder(o)">
+          <div>
+            <strong>#{{ o.id }} • {{ customerLabel(o) }}</strong>
+            <div class="muted">₱{{ toAmount(o.total_amount).toFixed(2) }} • {{ o.payment_method | uppercase }}</div>
+          </div>
+          <span class="badge" [ngClass]="'badge--' + statusKey(o)">{{ o.status }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDERS -->
+  <div *ngIf="activeTab === 'orders'">
+    <div class="toolbar">
+      <input type="search" class="input" placeholder="Search order number or customer" [(ngModel)]="orderSearch" />
+      <select class="input select" [(ngModel)]="paymentFilter">
+        <option value="all">All payments</option>
+        <option value="counter">Counter</option>
+        <option value="gcash">GCash</option>
+      </select>
+    </div>
+
+    <div class="chips filter-chips">
+      <button
+        *ngFor="let s of statusChips"
+        type="button"
+        class="chip"
+        [class.active]="statusFilter === s"
+        (click)="setStatusFilter(s)"
+      >
+        {{ s === 'active' ? 'All active' : s }}
+      </button>
+    </div>
+
+    <div *ngIf="filteredOrders.length === 0" class="empty-state">No orders match your filters.</div>
+
+    <div *ngIf="filteredOrders.length > 0" class="orders-layout">
+      <div class="orders-col">
+        <article
+          *ngFor="let o of filteredOrders"
+          class="order-card"
+          [class.selected]="selectedOrder?.id === o.id"
+          (click)="selectOrder(o)"
+        >
+          <div class="row-between">
+            <strong>#{{ o.id }} • {{ customerLabel(o) }}</strong>
+            <strong class="amount">₱{{ toAmount(o.total_amount).toFixed(2) }}</strong>
+          </div>
+          <div class="meta">
+            <span class="badge" [ngClass]="'badge--' + statusKey(o)">{{ o.status }}</span>
+            <span class="badge badge--neutral">{{ o.payment_method | uppercase }}</span>
+            <span class="muted">{{ typeLabel(o.order_type) }}</span>
+          </div>
+        </article>
+      </div>
+
+      <aside *ngIf="selectedOrder" class="card detail">
+        <div class="row-between">
+          <h3 class="section-title">Order #{{ selectedOrder.id }}</h3>
+          <span class="badge badge--neutral">{{ typeLabel(selectedOrder.order_type) }}</span>
+        </div>
+        <p class="muted">{{ customerLabel(selectedOrder) }}
+          <ng-container *ngIf="selectedOrder.created_at"> • {{ selectedOrder.created_at | date: 'medium' }}</ng-container>
+        </p>
+
+        <div class="detail-row">
+          <span>Payment</span>
+          <strong>{{ selectedOrder.payment_method | uppercase }}</strong>
+        </div>
+
+        <div class="payment-verify" *ngIf="selectedOrder.payment_method === 'gcash'">
+          <span>GCash reference no.</span>
+          <strong>{{ selectedOrder.payment_proof || 'None provided' }}</strong>
+        </div>
+
+        <h4 class="sub">Items</h4>
+        <div *ngIf="!selectedOrder.items || selectedOrder.items.length === 0" class="muted">No items recorded.</div>
+        <div class="detail-row" *ngFor="let item of selectedOrder.items">
+          <span>{{ item.quantity }} × {{ item.name }}</span>
+          <strong>₱{{ (toAmount(item.price) * item.quantity).toFixed(2) }}</strong>
+        </div>
+        <div class="detail-row total">
+          <span>Total</span>
+          <strong>₱{{ toAmount(selectedOrder.total_amount).toFixed(2) }}</strong>
+        </div>
+
+        <label class="field">
+          Fulfillment status
+          <select class="input" [(ngModel)]="detailStatus">
+            <option *ngFor="let st of orderStatuses" [value]="st">{{ st }}</option>
+          </select>
+        </label>
+
+        <label class="field">
+          Estimated waiting time (minutes)
+          <input type="number" min="1" max="240" class="input" [(ngModel)]="detailWait" placeholder="e.g. 15" />
+        </label>
+
+        <button type="button" class="btn btn-primary btn-block save" (click)="saveOrderDetails()">
+          Save status &amp; waiting time
+        </button>
+      </aside>
+    </div>
+  </div>
+
+  <!-- MENU -->
+  <div *ngIf="activeTab === 'menu'" class="stack">
+    <div class="card">
+      <h3 class="section-title">{{ editingItemId ? 'Edit menu item #' + editingItemId : 'Add new menu item' }}</h3>
+
+      <div class="form-grid">
+        <label class="field">
+          Category
+          <select class="input" [(ngModel)]="itemForm.category_id">
+            <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+          </select>
+        </label>
+
+        <label class="field">
+          Item name
+          <input type="text" class="input" [(ngModel)]="itemForm.name" placeholder="Dish name" />
+        </label>
+
+        <label class="field">
+          Price (₱)
+          <input type="number" step="0.01" class="input" [(ngModel)]="itemForm.price" />
+        </label>
+
+        <label class="field">
+          Image URL (optional)
+          <input type="text" class="input" [(ngModel)]="itemForm.image_url" placeholder="https://..." />
+        </label>
+
+        <label class="field full">
+          Description
+          <input type="text" class="input" [(ngModel)]="itemForm.description" placeholder="Short description" />
+        </label>
+
+        <label class="check full">
+          <input type="checkbox" [(ngModel)]="itemForm.is_available" />
+          <span>Available for ordering</span>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-primary" (click)="saveMenuItem()">
+          {{ editingItemId ? 'Save item changes' : 'Add item' }}
+        </button>
+        <button *ngIf="editingItemId" type="button" class="btn btn-outline" (click)="resetItemForm()">Cancel</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Categories</h3>
+      <div class="inline-form">
+        <input type="text" class="input" [(ngModel)]="newCategoryName" placeholder="New category name" />
+        <button type="button" class="btn btn-primary" (click)="addCategory()">+ Add category</button>
+      </div>
+      <div class="chips">
+        <span *ngFor="let cat of categories" class="cat-chip">
+          {{ cat.name }}
+          <button type="button" (click)="deleteCategory(cat)" title="Delete category">×</button>
+        </span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row-between wrap">
+        <h3 class="section-title">Menu catalog ({{ filteredMenuItems.length }})</h3>
+        <input type="search" class="input small-input" placeholder="Search menu name" [(ngModel)]="menuSearch" />
+      </div>
+
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Dish</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of filteredMenuItems" [class.dim]="!isAvailable(item.is_available)">
+              <td>
+                <strong>{{ item.name }}</strong>
+                <div class="muted">{{ item.description }}</div>
+              </td>
+              <td><span class="badge badge--neutral">{{ item.category_name || '#' + item.category_id }}</span></td>
+              <td>
+                <div class="price-inline">
+                  <span>₱</span>
+                  <input #priceInput type="number" step="0.01" class="input price-input" [value]="toAmount(item.price)" />
+                  <button type="button" class="btn btn-sm btn-ghost" (click)="quickUpdatePrice(item, priceInput.value)">
+                    Update
+                  </button>
+                </div>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="chip toggle"
+                  [class.active]="isAvailable(item.is_available)"
+                  (click)="toggleAvailability(item)"
+                >
+                  {{ isAvailable(item.is_available) ? 'Available' : 'Unavailable' }}
+                </button>
+              </td>
+              <td>
+                <div class="row-btns">
+                  <button type="button" class="btn btn-sm btn-outline" (click)="startEditItem(item)">Edit</button>
+                  <button type="button" class="btn btn-sm btn-danger" (click)="deleteMenuItem(item)">Delete</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div *ngIf="activeTab === 'users'" class="stack">
+    <div class="card">
+      <h3 class="section-title">Add a staff account</h3>
+      <div class="form-grid">
+        <label class="field">
+          Full name
+          <input type="text" class="input" [(ngModel)]="staffForm.name" placeholder="Staff name" />
+        </label>
+        <label class="field">
+          Email
+          <input type="email" class="input" [(ngModel)]="staffForm.email" placeholder="staff@mrhungry.com" />
+        </label>
+        <label class="field">
+          Password (8+ characters)
+          <input type="password" class="input" [(ngModel)]="staffForm.password" autocomplete="new-password" />
+        </label>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-primary" (click)="createStaff()">+ Add staff</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Registered accounts</h3>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of users">
+              <td><strong>{{ u.name }}</strong></td>
+              <td>{{ u.email }}</td>
+              <td><span class="badge badge--neutral">{{ u.role }}</span></td>
+              <td>
+                <span class="badge" [ngClass]="u.status === 'disabled' ? 'badge--cancelled' : 'badge--completed'">
+                  {{ u.status }}
+                </span>
+              </td>
+              <td>
+                <button
+                  *ngIf="u.role !== 'admin'"
+                  type="button"
+                  class="btn btn-sm"
+                  [ngClass]="u.status === 'disabled' ? 'btn-ghost' : 'btn-danger'"
+                  (click)="toggleUserStatus(u)"
+                >
+                  {{ u.status === 'disabled' ? 'Enable' : 'Disable' }}
+                </button>
+                <span *ngIf="u.role === 'admin'" class="muted">Protected</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGS -->
+  <div *ngIf="activeTab === 'logs'" class="split">
+    <div class="card">
+      <h3 class="section-title">Order activity</h3>
+      <div *ngIf="orderLogs.length === 0" class="muted">No order activity yet.</div>
+      <div *ngFor="let log of orderLogs" class="log-item">
+        <div class="row-between">
+          <strong>Order #{{ log.order_id }}</strong>
+          <span class="badge badge--neutral">{{ log.action }}</span>
+        </div>
+        <div class="muted">{{ log.details }} • {{ log.created_at | date: 'short' }}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Login history</h3>
+      <div *ngIf="loginLogs.length === 0" class="muted">No login logs yet.</div>
+      <div *ngFor="let l of loginLogs" class="log-item">
+        <div class="row-between">
+          <strong>{{ l.email }}</strong>
+          <span class="badge" [ngClass]="l.status === 'success' ? 'badge--completed' : 'badge--cancelled'">
+            {{ l.status }}
+          </span>
+        </div>
+        <div class="muted">{{ l.role || 'user' }} — {{ l.message }} • {{ l.created_at | date: 'short' }}</div>
+      </div>
+    </div>
+  </div>
+</section>

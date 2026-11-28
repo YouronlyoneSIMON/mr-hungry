@@ -1,0 +1,71 @@
+<section class="page account-page">
+  <div class="card profile-head">
+    <div class="avatar-lg">{{ initial }}</div>
+    <div>
+      <h1 class="who">{{ name || 'My account' }}</h1>
+      <div class="muted">{{ email }}</div>
+      <span class="badge badge--neutral role">{{ role }}</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="section-title">Edit profile</h3>
+
+    <div *ngIf="message" class="alert alert-success">{{ message }}</div>
+    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+    <label class="field">
+      Full name *
+      <input type="text" class="input" [(ngModel)]="name" />
+    </label>
+
+    <label class="field">
+      Email
+      <input type="text" class="input" [value]="email" disabled />
+    </label>
+
+    <h4 class="sub">Change password (optional)</h4>
+
+    <label class="field">
+      Current password
+      <input type="password" class="input" [(ngModel)]="currentPassword" autocomplete="current-password" />
+    </label>
+
+    <label class="field">
+      New password (8+ characters)
+      <input type="password" class="input" [(ngModel)]="newPassword" autocomplete="new-password" />
+    </label>
+
+    <label class="field">
+      Confirm new password
+      <input type="password" class="input" [(ngModel)]="confirmPassword" autocomplete="new-password" />
+    </label>
+
+    <button type="button" class="btn btn-primary btn-block save" (click)="saveProfile()" [disabled]="isSaving">
+      {{ isSaving ? 'Saving...' : 'Save profile changes' }}
+    </button>
+  </div>
+
+  <a *ngIf="role === 'customer'" routerLink="/orders" class="btn btn-outline btn-block">Order history →</a>
+
+  <div class="card danger-card" *ngIf="canDelete">
+    <h3 class="section-title">Delete account</h3>
+    <p class="muted">
+      Your account will be closed and you will be signed out. Past orders stay in the restaurant's
+      sales records but are no longer linked to your name.
+    </p>
+
+    <div *ngIf="deleteError" class="alert alert-error">{{ deleteError }}</div>
+
+    <label class="field">
+      Enter your password to confirm
+      <input type="password" class="input" [(ngModel)]="deletePassword" autocomplete="current-password" />
+    </label>
+
+    <button type="button" class="btn btn-danger btn-block save" (click)="deleteAccount()" [disabled]="isDeleting">
+      {{ isDeleting ? 'Deleting...' : 'Delete my account' }}
+    </button>
+  </div>
+
+  <button type="button" class="btn btn-dark btn-block" (click)="logout()">Sign out</button>
+</section>

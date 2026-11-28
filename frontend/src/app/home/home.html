@@ -1,0 +1,62 @@
+<section class="page home-page">
+  <div class="hero">
+    <span class="hero-tag">Dine-in self-ordering</span>
+    <h1>
+      {{ isGuest ? 'Hungry? Order from your table.' : 'Welcome back, ' + firstName + '!' }}
+    </h1>
+    <p>
+      Browse the menu, place your order, and follow it live, with no waiting in line.
+    </p>
+
+    <div class="hero-actions">
+      <ng-container *ngIf="isGuest">
+        <a routerLink="/menu" class="btn btn-light">Browse the menu</a>
+        <a routerLink="/signup" class="btn btn-outline-light">Sign up to order</a>
+      </ng-container>
+
+      <ng-container *ngIf="role === 'customer'">
+        <a routerLink="/menu" class="btn btn-light">Order now</a>
+        <a routerLink="/orders" class="btn btn-outline-light">My orders</a>
+      </ng-container>
+
+      <ng-container *ngIf="role === 'staff'">
+        <a routerLink="/staff" class="btn btn-light">Incoming orders</a>
+        <a routerLink="/staff/new-order" class="btn btn-outline-light">Walk-in order</a>
+      </ng-container>
+
+      <ng-container *ngIf="role === 'admin'">
+        <a routerLink="/admin" class="btn btn-light">Admin dashboard</a>
+        <a routerLink="/admin/sales" class="btn btn-outline-light">Sales</a>
+      </ng-container>
+    </div>
+  </div>
+
+  <h2 class="section-title how-title">How it works</h2>
+  <div class="steps">
+    <div class="card step">
+      <span class="step-ico">🍔</span>
+      <strong>1. Pick your meal</strong>
+      <p class="muted">Search the menu, check the details, and add dishes to your cart.</p>
+    </div>
+    <div class="card step">
+      <span class="step-ico">💳</span>
+      <strong>2. Pay your way</strong>
+      <p class="muted">Pay at the counter or scan the GCash QR and enter the reference number.</p>
+    </div>
+    <div class="card step">
+      <span class="step-ico">⏱️</span>
+      <strong>3. Track your order</strong>
+      <p class="muted">See the status and waiting time live, then get your digital receipt.</p>
+    </div>
+  </div>
+
+  <div class="card find-card">
+    <div>
+      <span class="eyebrow">Visit us</span>
+      <h3>Mr Hungry Kitchen</h3>
+      <p class="muted">2nd Floor, Alvela Street, Brgy. Kanluran, Calauan, Laguna 4012</p>
+      <p class="muted">Daily, 11:00 AM – 11:00 PM</p>
+    </div>
+    <a routerLink="/map" class="btn btn-primary">Find us on the map</a>
+  </div>
+</section>

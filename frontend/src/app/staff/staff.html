@@ -1,0 +1,140 @@
+<section class="staff-page">
+  <header class="staff-header">
+    <div>
+      <span class="eyebrow">Mr. Hungry • Staff Mode</span>
+      <h2>Incoming Orders</h2>
+      <p class="muted">Check payment, then move each order from received to completed.</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/staff/new-order" class="btn btn-primary">+ New Walk-in Order</a>
+      <button type="button" class="btn btn-ghost" (click)="loadOrders()" [disabled]="loading">
+        {{ loading ? 'Refreshing...' : 'Refresh' }}
+      </button>
+      <a *ngIf="isAdmin" routerLink="/admin" class="btn btn-ghost">Back to Admin Mode</a>
+    </div>
+  </header>
+
+  <div *ngIf="message" class="alert alert-success">{{ message }}</div>
+  <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+  <div class="filter-row">
+    <label>
+      Show
+      <select [value]="statusFilter" (change)="statusFilter = $any($event.target).value" class="select">
+        <option value="active">Active orders</option>
+        <option value="received">Received</option>
+        <option value="preparing">Preparing</option>
+        <option value="ready">Ready</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+        <option value="all">All</option>
+      </select>
+    </label>
+  </div>
+
+  <div *ngIf="filteredOrders.length === 0" class="empty-box">No orders to show.</div>
+
+  <div *ngIf="filteredOrders.length > 0" class="staff-grid">
+    <div class="orders-list">
+      <div
+        *ngFor="let order of filteredOrders"
+        class="order-card"
+        [class.selected]="selectedOrder?.id === order.id"
+        (click)="selectOrder(order)"
+      >
+        <div class="row">
+          <strong>Order #{{ order.id }}</strong>
+          <span class="amount">₱{{ toAmount(order.total_amount).toFixed(2) }}</span>
+        </div>
+        <div class="row small">
+          <span class="badge">{{ order.status }}</span>
+          <span class="badge pay">{{ order.payment_method | uppercase }}</span>
+          <span class="badge pay">{{ typeLabel(order.order_type) }}</span>
+          <span class="muted">{{ $any(order).customer_name || ('Customer #' + order.customer_id) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <aside *ngIf="selectedOrder" class="detail-card">
+      <h3>Order #{{ selectedOrder.id }}</h3>
+
+      <div class="detail-row">
+        <span>Customer</span>
+        <strong>{{ $any(selectedOrder).customer_name || ('Customer #' + selectedOrder.customer_id) }}</strong>
+      </div>
+
+      <div class="detail-row">
+        <span>Order type</span>
+        <strong>{{ typeLabel(selectedOrder.order_type) }}</strong>
+      </div>
+
+      <div class="detail-row">
+        <span>Payment</span>
+        <strong>{{ selectedOrder.payment_method | uppercase }}</strong>
+      </div>
+
+      <div class="detail-row" *ngIf="selectedOrder.payment_method === 'gcash'">
+        <span>GCash reference no.</span>
+        <strong class="ref">{{ selectedOrder.payment_proof || 'None provided' }}</strong>
+      </div>
+
+      <p class="hint" *ngIf="selectedOrder.payment_method === 'gcash'">
+        Compare this number with the GCash receipt the customer shows.
+      </p>
+      <p class="hint" *ngIf="selectedOrder.payment_method === 'counter'">
+        Take the payment at the counter.
+      </p>
+
+      <h4>Items</h4>
+      <div *ngIf="!selectedOrder.items || selectedOrder.items.length === 0" class="muted">
+        No items recorded.
+      </div>
+      <div *ngFor="let item of selectedOrder.items" class="item-line">
+        <span>{{ item.quantity }} × {{ item.name }}</span>
+        <strong>₱{{ (toAmount(item.price) * item.quantity).toFixed(2) }}</strong>
+      </div>
+
+      <div class="detail-total">
+        <span>Total</span>
+        <strong>₱{{ toAmount(selectedOrder.total_amount).toFixed(2) }}</strong>
+      </div>
+
+      <div
+        class="wait-box"
+        *ngIf="selectedOrder.status === 'received' || selectedOrder.status === 'preparing'"
+      >
+        <label>
+          Estimated waiting time (minutes)
+          <input type="number" min="1" max="240" [(ngModel)]="waitMinutes" class="select wait-input" />
+        </label>
+        <button
+          *ngIf="selectedOrder.status === 'preparing'"
+          type="button"
+          class="btn btn-ghost"
+          (click)="updateWaitTime(selectedOrder)"
+        >
+          Update wait time
+        </button>
+      </div>
+
+      <div class="actions">
+        <button
+          *ngIf="nextStatus[selectedOrder.status]"
+          type="button"
+          class="btn btn-primary"
+          (click)="advance(selectedOrder)"
+        >
+          {{ nextLabel[selectedOrder.status] }}
+        </button>
+        <button
+          *ngIf="selectedOrder.status !== 'completed' && selectedOrder.status !== 'cancelled'"
+          type="button"
+          class="btn btn-danger"
+          (click)="setStatus(selectedOrder, 'cancelled')"
+        >
+          Cancel order
+        </button>
+      </div>
+    </aside>
+  </div>
+</section>

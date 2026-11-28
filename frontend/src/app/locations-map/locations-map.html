@@ -1,0 +1,65 @@
+<section class="locations-section">
+  <div class="locations-header">
+    <span class="flame-pill">Live Map</span>
+    <h2>Mr. Hungry Locations &amp; Map</h2>
+    <p>See Mr Hungry Kitchen and your current location on the map.</p>
+  </div>
+
+  <div class="locations-layout">
+    <div class="info-column">
+      <article class="resto-card active">
+        <div class="card-top">
+          <div>
+            <span class="mini-tag">Restaurant Location</span>
+            <h3>{{ resto.name }}</h3>
+          </div>
+          <span class="status-badge">{{ resto.status }}</span>
+        </div>
+
+        <p class="address-line">{{ resto.address }}</p>
+        <p class="meta-line"><strong>Hours:</strong> {{ resto.hours }}</p>
+        <p class="meta-line"><strong>Resto Coordinates:</strong> {{ resto.lat }}, {{ resto.lng }}</p>
+      </article>
+
+      <article class="user-card">
+        <div class="card-top">
+          <div>
+            <span class="mini-tag charcoal-tag">Your Current Location</span>
+            <h3>{{ locationStatus }}</h3>
+          </div>
+          <button type="button" class="btn-refresh" (click)="locateUser()">Refresh Location</button>
+        </div>
+
+        <ng-container *ngIf="userLocation; else noLocation">
+          <p class="address-line"><strong>Your Coordinates:</strong> {{ userLocation.lat }}, {{ userLocation.lng }}</p>
+          <p class="meta-line"><strong>Accuracy:</strong> ~{{ userLocation.accuracy }} m</p>
+          <p class="distance-highlight" *ngIf="distanceKm !== null">
+            Approx. distance to {{ resto.name }}: <span>{{ distanceKm }} km</span>
+          </p>
+        </ng-container>
+
+        <ng-template #noLocation>
+          <p class="meta-line" *ngIf="locationError">{{ locationError }}</p>
+          <p class="meta-line" *ngIf="!locationError">Waiting for browser location permission or GPS fix...</p>
+        </ng-template>
+      </article>
+    </div>
+
+    <aside class="map-panel">
+      <div class="map-panel-header">
+        <span class="flame-pill">Interactive Map</span>
+        <h3>{{ resto.name }} &amp; Your Location</h3>
+      </div>
+
+      <div class="map-frame-wrap">
+        <div id="resto-map" class="leaflet-host"></div>
+      </div>
+
+      <div class="map-footer-note">
+        <span><strong>Orange pin:</strong> {{ resto.name }} ({{ resto.lat }}, {{ resto.lng }})</span>
+        <span *ngIf="userLocation"><strong>Black pin:</strong> You ({{ userLocation.lat }}, {{ userLocation.lng }})</span>
+        <span *ngIf="!userLocation"><strong>Black pin:</strong> Waiting for location permission</span>
+      </div>
+    </aside>
+  </div>
+</section>

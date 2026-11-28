@@ -1,0 +1,89 @@
+<header class="topbar">
+  <a routerLink="/" class="brand" (click)="closeProfileMenu()">
+    <span class="brand-logo">MH</span>
+    <span class="brand-name">Mr. Hungry</span>
+  </a>
+
+  <!-- Laptop navigation -->
+  <nav class="topnav">
+    <ng-container *ngIf="isAdmin">
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="navlink">Admin</a>
+      <a routerLink="/admin/sales" routerLinkActive="active" class="navlink">Sales</a>
+      <a routerLink="/staff" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="navlink">Staff Mode</a>
+    </ng-container>
+
+    <ng-container *ngIf="isStaff">
+      <a routerLink="/staff" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="navlink">Orders</a>
+      <a routerLink="/staff/new-order" routerLinkActive="active" class="navlink">Walk-in Order</a>
+    </ng-container>
+
+    <ng-container *ngIf="!isAdmin && !isStaff">
+      <a routerLink="/menu" routerLinkActive="active" class="navlink">Menu</a>
+      <a routerLink="/map" routerLinkActive="active" class="navlink">Location &amp; Map</a>
+      <a *ngIf="isLoggedIn" routerLink="/orders" routerLinkActive="active" class="navlink">Orders</a>
+    </ng-container>
+  </nav>
+
+  <div class="topbar-right">
+    <a *ngIf="isLoggedIn && !isAdmin && !isStaff" routerLink="/cart" class="cart-btn" aria-label="Cart">
+      <span aria-hidden="true">🛒</span>
+      <span *ngIf="cartState.totalItemCount > 0" class="cart-badge">{{ cartState.totalItemCount }}</span>
+    </a>
+
+    <ng-container *ngIf="!isLoggedIn">
+      <a routerLink="/login" class="btn btn-sm signin-btn">Sign in</a>
+      <a routerLink="/signup" class="btn btn-sm btn-primary hide-mobile">Sign up</a>
+    </ng-container>
+
+    <div class="profile-wrap" *ngIf="isLoggedIn">
+      <button type="button" class="avatar" (click)="toggleProfileMenu()" aria-label="Account menu">
+        {{ (currentUser?.name || currentUser?.email || '?').charAt(0).toUpperCase() }}
+      </button>
+
+      <div *ngIf="profileMenuOpen" class="dropdown">
+        <div class="dropdown-header">
+          <strong>{{ currentUser?.name || 'Account' }}</strong>
+          <span>{{ currentUser?.email }}</span>
+          <span class="role-pill">{{ currentUser?.role }}</span>
+        </div>
+        <a routerLink="/account" class="dropdown-item" (click)="closeProfileMenu()">My Account</a>
+        <a *ngIf="!isAdmin && !isStaff" routerLink="/orders" class="dropdown-item" (click)="closeProfileMenu()">Order History</a>
+        <button type="button" class="dropdown-item danger" (click)="logout()">Sign Out</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="app-main">
+  <router-outlet />
+</main>
+
+<!-- Phone navigation (as in the wireframes) -->
+<nav class="bottomnav">
+  <ng-container *ngIf="isAdmin">
+    <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><span class="ico">📊</span><span>Admin</span></a>
+    <a routerLink="/admin/sales" routerLinkActive="active"><span class="ico">💰</span><span>Sales</span></a>
+    <a routerLink="/staff" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><span class="ico">👨‍🍳</span><span>Staff</span></a>
+    <a routerLink="/account" routerLinkActive="active"><span class="ico">👤</span><span>Account</span></a>
+  </ng-container>
+
+  <ng-container *ngIf="isStaff">
+    <a routerLink="/staff" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><span class="ico">🧾</span><span>Orders</span></a>
+    <a routerLink="/staff/new-order" routerLinkActive="active"><span class="ico">➕</span><span>Walk-in</span></a>
+    <a routerLink="/account" routerLinkActive="active"><span class="ico">👤</span><span>Account</span></a>
+  </ng-container>
+
+  <ng-container *ngIf="!isAdmin && !isStaff">
+    <a routerLink="/menu" routerLinkActive="active"><span class="ico">🍔</span><span>Menu</span></a>
+    <a routerLink="/map" routerLinkActive="active"><span class="ico">📍</span><span>Map</span></a>
+
+    <ng-container *ngIf="isLoggedIn; else guestTab">
+      <a routerLink="/orders" routerLinkActive="active"><span class="ico">🧾</span><span>Orders</span></a>
+      <a routerLink="/account" routerLinkActive="active"><span class="ico">👤</span><span>Account</span></a>
+    </ng-container>
+
+    <ng-template #guestTab>
+      <a routerLink="/signup" routerLinkActive="active"><span class="ico">✨</span><span>Sign up</span></a>
+    </ng-template>
+  </ng-container>
+</nav>

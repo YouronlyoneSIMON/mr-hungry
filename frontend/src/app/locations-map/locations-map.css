@@ -1,0 +1,200 @@
+:host {
+  display: block;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: calc(var(--header-h) + 24px) 20px 40px;
+}
+
+.locations-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.flame-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--gradient-soft);
+  border: 1px solid var(--brand-200);
+  color: var(--brand-600);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.locations-header h2 {
+  margin: 8px 0 4px;
+  font-size: clamp(1.6rem, 2.4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.locations-header p {
+  margin: 0;
+  color: var(--ink-500);
+}
+
+.locations-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(360px, 1.4fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.info-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.resto-card,
+.user-card {
+  padding: 18px 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.resto-card.active {
+  border: 2px solid var(--brand-600);
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.card-top h3 {
+  margin: 2px 0 0;
+  font-size: 1.1rem;
+}
+
+.mini-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--brand-600);
+}
+
+.charcoal-tag {
+  color: var(--ink-700);
+}
+
+.status-badge {
+  padding: 3px 11px;
+  border-radius: 999px;
+  background: var(--success-bg);
+  color: #047857;
+  border: 1px solid var(--success-line);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.address-line {
+  margin: 0 0 8px;
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
+.meta-line {
+  margin: 0 0 6px;
+  font-size: 0.88rem;
+  color: var(--ink-500);
+}
+
+.distance-highlight {
+  margin: 12px 0 0;
+  padding: 11px 14px;
+  background: var(--gradient-soft);
+  border: 1px solid var(--brand-300);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.distance-highlight span {
+  color: var(--brand-700);
+  font-weight: 800;
+}
+
+.btn-refresh {
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--gradient-brand);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: var(--shadow-brand);
+}
+
+.map-panel {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.map-panel-header {
+  padding: 14px 20px;
+  background: var(--gradient-dark);
+  border-bottom: 3px solid var(--brand-600);
+  color: #fff;
+}
+
+.map-panel-header h3 {
+  margin: 6px 0 0;
+  font-size: 1.05rem;
+}
+
+.map-frame-wrap {
+  width: 100%;
+  height: 380px;
+  background: #f3f4f6;
+}
+
+.leaflet-host {
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.map-footer-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 18px;
+  background: #f9fafb;
+  border-top: 1px solid var(--line);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 900px) {
+  :host {
+    padding: calc(var(--header-h) + 16px) 14px calc(var(--bottomnav-h) + 24px);
+  }
+
+  .locations-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* Map first, like the wireframe */
+  .map-panel {
+    order: -1;
+  }
+
+  .map-frame-wrap {
+    height: 300px;
+  }
+}

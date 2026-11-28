@@ -1,0 +1,50 @@
+.account-page {
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatar-lg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 64px;
+  border-radius: 50%;
+  background: var(--gradient-brand);
+  color: #fff;
+  font-size: 1.6rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-brand);
+}
+
+.who {
+  margin: 0 0 2px;
+  font-size: 1.3rem;
+}
+
+.role {
+  margin-top: 6px;
+}
+
+.sub {
+  margin: 22px 0 0;
+  font-size: 0.92rem;
+  color: var(--ink-700);
+}
+
+.save {
+  margin-top: 18px;
+}
+
+.danger-card {
+  border-color: var(--danger-line);
+}

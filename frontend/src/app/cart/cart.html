@@ -1,0 +1,236 @@
+<section class="page cart-page">
+  <!-- Guests -->
+  <div *ngIf="!isLoggedIn" class="card gate">
+    <h2>Log in to order</h2>
+    <p class="muted">You need a customer account to place a dine-in order.</p>
+    <a routerLink="/login" class="btn btn-primary btn-block">Log in</a>
+    <a routerLink="/signup" class="btn btn-outline btn-block">Create an account</a>
+  </div>
+
+  <!-- Staff and admin -->
+  <div *ngIf="isLoggedIn && !isCustomer" class="card gate">
+    <h2>Customer accounts only</h2>
+    <p class="muted">
+      Website orders are placed by customers. Counter customers are handled with
+      <strong>Walk-in Order</strong> in staff mode.
+    </p>
+    <a routerLink="/staff/new-order" class="btn btn-primary btn-block">Open Walk-in Order</a>
+  </div>
+
+  <ng-container *ngIf="isCustomer">
+    <!-- Step: order received -->
+    <div *ngIf="step === 'done' && placed" class="card done-card">
+      <div class="done-check">✓</div>
+      <h2>Order received</h2>
+      <p class="muted">Thanks, {{ firstName }}! Your order has been placed.</p>
+
+      <div class="done-box">
+        <div class="row-between"><span>Order no.</span><strong>#{{ placed.id }}</strong></div>
+        <div class="row-between">
+          <span>Type</span>
+          <strong>{{ placed.orderType === 'take-out' ? 'Take-out' : 'Dine-in' }}</strong>
+        </div>
+        <div class="row-between">
+          <span>Payment</span>
+          <strong>{{ placed.paymentMethod === 'gcash' ? 'GCash (pending verification)' : 'Pay at the counter' }}</strong>
+        </div>
+        <div class="row-between total"><span>Total</span><strong>₱{{ placed.total.toFixed(2) }}</strong></div>
+      </div>
+
+      <p class="muted center">
+        Staff will confirm your payment and set your waiting time. Follow the status in Order History.
+      </p>
+
+      <a routerLink="/orders" class="btn btn-primary btn-block">Track order</a>
+      <a routerLink="/menu" class="btn btn-outline btn-block">Back to menu</a>
+    </div>
+
+    <ng-container *ngIf="step !== 'done'">
+      <header class="page-head">
+        <div>
+          <span class="eyebrow">
+            {{ step === 'cart' ? 'Step 1' : step === 'checkout' ? 'Step 2' : 'Step 3' }}
+          </span>
+          <h1 class="page-title">
+            {{ step === 'cart' ? 'Your cart' : step === 'checkout' ? 'Review your order' : 'Scan to pay' }}
+          </h1>
+        </div>
+        <button
+          *ngIf="step === 'cart' && cartState.items.length > 0"
+          type="button"
+          class="btn btn-ghost btn-sm"
+          (click)="clearCart()"
+        >
+          Clear cart
+        </button>
+      </header>
+
+      <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+      <div *ngIf="cartState.items.length === 0" class="empty-state">
+        <p><strong>Your cart is empty.</strong></p>
+        <p class="muted">Pick something from the menu to get started.</p>
+        <a routerLink="/menu" class="btn btn-primary">Browse menu</a>
+      </div>
+
+      <!-- Step 1: cart -->
+      <ng-container *ngIf="step === 'cart' && cartState.items.length > 0">
+        <div class="card">
+          <div class="cart-row" *ngFor="let item of cartState.items; let i = index">
+            <div class="cart-info">
+              <strong>{{ item.name }}</strong>
+              <span class="muted">₱{{ item.price.toFixed(2) }} each</span>
+            </div>
+
+            <div class="qty-stepper">
+              <button type="button" (click)="updateQuantity(i, -1)" aria-label="Decrease">−</button>
+              <span>{{ item.quantity }}</span>
+              <button type="button" (click)="updateQuantity(i, 1)" aria-label="Increase">+</button>
+            </div>
+
+            <strong class="line-total">₱{{ (item.price * item.quantity).toFixed(2) }}</strong>
+            <button type="button" class="remove-btn" (click)="removeItem(i)">Remove</button>
+          </div>
+
+          <div class="row-between total">
+            <span>Total</span>
+            <strong>₱{{ cartState.totalAmount.toFixed(2) }}</strong>
+          </div>
+        </div>
+
+        <div class="actions">
+          <a routerLink="/menu" class="btn btn-outline">Add more items</a>
+          <button type="button" class="btn btn-primary" (click)="goToCheckout()">
+            Continue to checkout
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Step 2: review -->
+      <ng-container *ngIf="step === 'checkout' && cartState.items.length > 0">
+        <div class="stack">
+          <div class="card">
+            <h3 class="section-title">Order type</h3>
+            <div class="seg">
+              <button type="button" class="seg-btn" [class.active]="orderType === 'dine-in'" (click)="orderType = 'dine-in'">
+                Dine-in
+              </button>
+              <button type="button" class="seg-btn" [class.active]="orderType === 'take-out'" (click)="orderType = 'take-out'">
+                Take-out
+              </button>
+            </div>
+            <p class="muted hint-line">
+              Mr. Hungry restaurant • {{ orderType === 'dine-in' ? 'Eat at the restaurant' : 'Pick up at the counter' }}
+            </p>
+          </div>
+
+          <div class="card">
+            <h3 class="section-title">Customer details</h3>
+            <div class="row-between"><span class="muted">Name</span><strong>{{ userName }}</strong></div>
+            <div class="row-between"><span class="muted">Email</span><strong>{{ userEmail }}</strong></div>
+          </div>
+
+          <div class="card">
+            <h3 class="section-title">Order summary</h3>
+            <ng-container *ngTemplateOutlet="summary"></ng-container>
+          </div>
+
+          <div class="card">
+            <h3 class="section-title">Select payment method</h3>
+
+            <label class="pay-option" [class.active]="paymentMethod === 'counter'">
+              <input type="radio" name="pay" value="counter" [(ngModel)]="paymentMethod" />
+              <span>
+                <strong>Pay at the Counter</strong>
+                <small>Place the order now and pay at the counter.</small>
+              </span>
+            </label>
+
+            <label class="pay-option" [class.active]="paymentMethod === 'gcash'">
+              <input type="radio" name="pay" value="gcash" [(ngModel)]="paymentMethod" />
+              <span>
+                <strong>Cashless (Scan to Pay)</strong>
+                <small>Pay with the GCash QR, then enter the reference number.</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-outline" (click)="backToCart()">Back to cart</button>
+          <button type="button" class="btn btn-primary" (click)="continueFromCheckout()" [disabled]="isSubmitting">
+            {{
+              paymentMethod === 'gcash'
+                ? 'Continue to scan to pay'
+                : isSubmitting
+                  ? 'Placing order...'
+                  : 'Place order · ₱' + cartState.totalAmount.toFixed(2)
+            }}
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Step 3: GCash -->
+      <ng-container *ngIf="step === 'qr' && cartState.items.length > 0">
+        <div class="stack">
+          <div class="card qr-card">
+            <p class="muted center">Scan this QR with GCash and pay the exact amount.</p>
+
+            <div class="qr-frame">
+              <img
+                *ngIf="!qrLoadFailed"
+                [src]="gcashQrUrl"
+                alt="Mr. Hungry GCash QR code"
+                class="qr-image"
+                (error)="onQrImageError()"
+              />
+              <div *ngIf="qrLoadFailed" class="qr-placeholder">
+                <strong>GCash QR image</strong>
+                <span>Put your QR image at <code>public/gcash-qr.png</code></span>
+              </div>
+            </div>
+
+            <a [href]="gcashQrUrl" download="mr-hungry-gcash-qr.png" class="btn btn-ghost btn-block">
+              Save QR to device
+            </a>
+
+            <div class="amount-due">
+              <span>Amount due</span>
+              <strong>₱{{ cartState.totalAmount.toFixed(2) }}</strong>
+            </div>
+
+            <label class="field">
+              GCash reference number *
+              <input
+                type="text"
+                class="input"
+                [(ngModel)]="paymentProof"
+                placeholder="Enter the reference number"
+                [disabled]="isSubmitting"
+              />
+            </label>
+            <p class="muted hint-line">Staff will check this number against your payment.</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btn-outline" (click)="backToCheckout()">Back</button>
+          <button type="button" class="btn btn-primary" (click)="placeOrder()" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Submitting...' : 'Submit payment details' }}
+          </button>
+        </div>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+
+  <ng-template #summary>
+    <div class="sum-row" *ngFor="let item of cartState.items">
+      <span>{{ item.quantity }} × {{ item.name }}</span>
+      <strong>₱{{ (item.price * item.quantity).toFixed(2) }}</strong>
+    </div>
+    <div class="row-between total">
+      <span>Total</span>
+      <strong>₱{{ cartState.totalAmount.toFixed(2) }}</strong>
+    </div>
+  </ng-template>
+</section>

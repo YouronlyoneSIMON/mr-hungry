@@ -1,0 +1,70 @@
+<section class="sales-page">
+  <header class="sales-header">
+    <div>
+      <span class="eyebrow">Mr. Hungry • Management Console</span>
+      <h2>Sales Summary</h2>
+      <p class="muted">Counts completed orders only.</p>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-ghost" (click)="load()" [disabled]="loading">
+        {{ loading ? 'Refreshing...' : '↻ Refresh' }}
+      </button>
+      <a routerLink="/admin" class="btn btn-primary">← Back to Admin</a>
+    </div>
+  </header>
+
+  <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+  <ng-container *ngIf="summary">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">Total Revenue</span>
+        <strong class="stat-value success">₱{{ summary.totalRevenue.toFixed(2) }}</strong>
+        <span class="stat-hint">{{ summary.completedOrders }} completed orders</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Today</span>
+        <strong class="stat-value">₱{{ summary.todayRevenue.toFixed(2) }}</strong>
+        <span class="stat-hint">{{ summary.todayOrders }} completed today</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Average Order</span>
+        <strong class="stat-value">₱{{ summary.averageOrder.toFixed(2) }}</strong>
+        <span class="stat-hint">Per completed order</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Completed sales by day (last 14 days)</h3>
+
+      <div *ngIf="summary.byDay.length === 0" class="muted">No completed orders in this period yet.</div>
+
+      <div *ngIf="summary.byDay.length > 0" class="chart">
+        <div *ngFor="let d of summary.byDay" class="bar-col">
+          <span class="bar-value">₱{{ d.revenue.toFixed(0) }}</span>
+          <div class="bar" [style.height.%]="barHeight(d.revenue)"></div>
+          <span class="bar-label">{{ dayLabel(d.day) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Best sellers</h3>
+
+      <div *ngIf="summary.topItems.length === 0" class="muted">No sold items yet.</div>
+
+      <table *ngIf="summary.topItems.length > 0" class="table">
+        <thead>
+          <tr><th>#</th><th>Dish</th><th>Sold</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of summary.topItems; let i = index">
+            <td>{{ i + 1 }}</td>
+            <td>{{ item.name }}</td>
+            <td><strong>{{ item.sold }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</section>

@@ -1,0 +1,112 @@
+<section class="auth-page">
+  <div class="auth-card card">
+    <div class="auth-logo">MH</div>
+
+    <h2 class="auth-title">{{ isSignup ? 'Create your account' : 'Welcome Back!' }}</h2>
+    <p class="muted auth-sub">
+      {{ isSignup ? 'Sign up to place dine-in orders.' : 'Log in to order your favorite meals.' }}
+    </p>
+
+    <div *ngIf="currentUser" class="signed-banner">
+      <div>
+        <span>Signed in as</span>
+        <strong>{{ currentUser.name || currentUser.fullName }}</strong>
+      </div>
+      <div class="banner-actions">
+        <button type="button" class="btn btn-sm btn-primary" (click)="continueSession()">Continue</button>
+        <button type="button" class="btn btn-sm btn-outline" (click)="logout()">Log out</button>
+      </div>
+    </div>
+
+    <div *ngIf="message" class="alert alert-success">{{ message }}</div>
+    <div *ngIf="infoMessage" class="alert alert-info">{{ infoMessage }}</div>
+    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+    <form (ngSubmit)="onSubmit()" novalidate>
+      <label class="field" *ngIf="isSignup">
+        Full name *
+        <input
+          type="text"
+          class="input"
+          [(ngModel)]="fullName"
+          name="fullName"
+          placeholder="Enter your full name"
+          autocomplete="name"
+        />
+      </label>
+
+      <label class="field">
+        Email *
+        <input
+          type="email"
+          class="input"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="Enter registered email"
+          autocomplete="email"
+        />
+      </label>
+
+      <label class="field">
+        Password *
+        <div class="pw-wrap">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            class="input"
+            [(ngModel)]="password"
+            name="password"
+            [placeholder]="isSignup ? 'Create a password' : 'Enter password'"
+            [attr.autocomplete]="isSignup ? 'new-password' : 'current-password'"
+          />
+          <button type="button" class="pw-toggle" (click)="showPassword = !showPassword">
+            {{ showPassword ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+      </label>
+
+      <label class="field" *ngIf="isSignup">
+        Confirm password *
+        <div class="pw-wrap">
+          <input
+            [type]="showConfirm ? 'text' : 'password'"
+            class="input"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            placeholder="Re-enter password"
+            autocomplete="new-password"
+          />
+          <button type="button" class="pw-toggle" (click)="showConfirm = !showConfirm">
+            {{ showConfirm ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+      </label>
+
+      <div class="forgot-row" *ngIf="!isSignup">
+        <button type="button" class="link-btn" (click)="forgotPassword()">Forgot your password?</button>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block submit-btn" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Please wait...' : isSignup ? 'Create account' : 'Log in' }}
+      </button>
+    </form>
+
+    <!-- Login extras -->
+    <ng-container *ngIf="!isSignup">
+      <p class="switch-line">
+        Not a member yet? <a routerLink="/signup" class="link-btn">Sign up</a>
+      </p>
+
+      <div class="divider"><span>or</span></div>
+
+      <button type="button" class="btn btn-outline btn-block" (click)="continueAsGuest()">
+        Continue as Guest
+      </button>
+      <p class="hint">Browse the menu and map only. Log in to order.</p>
+    </ng-container>
+
+    <!-- Sign up extras -->
+    <ng-container *ngIf="isSignup">
+      <a routerLink="/login" class="btn btn-outline btn-block back-btn">Back to login</a>
+    </ng-container>
+  </div>
+</section>

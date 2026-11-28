@@ -1,0 +1,129 @@
+<section class="page history-page">
+  <header class="page-head">
+    <div>
+      <span class="eyebrow">My orders</span>
+      <h1 class="page-title">Order History</h1>
+      <p class="muted">Track live status and review your receipts.</p>
+    </div>
+
+    <div class="head-actions">
+      <button *ngIf="isLoggedIn" type="button" class="btn btn-ghost" (click)="refreshOrders()" [disabled]="isLoading">
+        {{ isLoading ? 'Refreshing...' : 'Refresh status' }}
+      </button>
+      <a routerLink="/menu" class="btn btn-primary">Browse menu</a>
+    </div>
+  </header>
+
+  <p *ngIf="isLoggedIn && lastUpdatedAt" class="muted sync">
+    Live sync on • Updated {{ lastUpdatedAt | date: 'shortTime' }}
+  </p>
+
+  <div *ngIf="completedNotice" class="alert alert-success notice">
+    <span>
+      Your order <strong>#{{ completedNotice.id }}</strong> is complete. Thank you for ordering at Mr. Hungry!
+    </span>
+    <span class="notice-actions">
+      <button type="button" class="btn btn-sm btn-primary" (click)="viewReceipt(completedNotice)">View receipt</button>
+      <button type="button" class="notice-close" (click)="dismissNotice()" aria-label="Dismiss">×</button>
+    </span>
+  </div>
+
+  <div *ngIf="!isLoggedIn" class="card gate">
+    <h2>Sign in to view your orders</h2>
+    <p class="muted">Guests can browse the menu and map. Customers can follow their orders here.</p>
+    <button type="button" class="btn btn-primary" (click)="goToLogin()">Sign in</button>
+  </div>
+
+  <ng-container *ngIf="isLoggedIn">
+    <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+    <div *ngIf="isLoading && orders.length === 0" class="empty-state">Loading your orders...</div>
+
+    <div *ngIf="!isLoading && !errorMessage && orders.length === 0" class="empty-state">
+      <p><strong>No orders yet.</strong></p>
+      <a routerLink="/menu" class="btn btn-primary">Order now</a>
+    </div>
+
+    <div *ngIf="orders.length > 0" class="history-layout">
+      <!-- Details and tracker -->
+      <aside class="detail-card card" *ngIf="selectedOrder">
+        <div *ngIf="isCompleted(selectedOrder)" class="receipt-title">
+          <strong>Mr. Hungry</strong>
+          <span>Digital receipt</span>
+        </div>
+
+        <h2 class="detail-headline">{{ headline(selectedOrder) }}</h2>
+        <p class="muted">Order #{{ selectedOrder.id }}
+          <ng-container *ngIf="selectedOrder.orderDate"> • {{ selectedOrder.orderDate | date: 'medium' }}</ng-container>
+        </p>
+
+        <div class="tracker" *ngIf="stepIndex(selectedOrder) >= 0">
+          <div
+            *ngFor="let step of trackSteps; let i = index"
+            class="track-step"
+            [class.done]="i <= stepIndex(selectedOrder)"
+            [class.current]="i === stepIndex(selectedOrder)"
+          >
+            <span class="dot">{{ i <= stepIndex(selectedOrder) ? '✓' : i + 1 }}</span>
+            <span class="label">{{ step }}</span>
+          </div>
+        </div>
+
+        <div
+          class="wait-box"
+          *ngIf="selectedOrder.estimatedWait && (statusKey(selectedOrder) === 'preparing' || statusKey(selectedOrder) === 'received' || statusKey(selectedOrder) === 'ready')"
+        >
+          <span>Estimated waiting time</span>
+          <strong>{{ selectedOrder.estimatedWait }} min</strong>
+        </div>
+
+        <p class="pay-note">{{ paymentNote(selectedOrder) }}</p>
+
+        <div class="detail-row"><span class="muted">Order type</span><strong>{{ typeLabel(selectedOrder.orderType) }}</strong></div>
+        <div class="detail-row"><span class="muted">Payment</span><strong>{{ selectedOrder.paymentMethod | uppercase }}</strong></div>
+
+        <h3 class="section-title items-title">Items</h3>
+        <div *ngIf="selectedOrder.items.length === 0" class="muted">No line items recorded.</div>
+        <div class="detail-row" *ngFor="let line of selectedOrder.items">
+          <span>{{ line.quantity }} × {{ line.name }}</span>
+          <strong>₱{{ (line.price * line.quantity).toFixed(2) }}</strong>
+        </div>
+
+        <div class="detail-row total">
+          <span>Total</span>
+          <strong>₱{{ selectedOrder.totalAmount.toFixed(2) }}</strong>
+        </div>
+      </aside>
+
+      <!-- List -->
+      <div class="orders-list">
+        <article
+          class="order-card"
+          *ngFor="let order of orders"
+          [class.active]="selectedOrder?.id === order.id"
+          (click)="selectOrder(order)"
+        >
+          <div class="row-between">
+            <div>
+              <strong>Order #{{ order.id }}</strong>
+              <div class="muted" *ngIf="order.orderDate">{{ order.orderDate | date: 'medium' }}</div>
+            </div>
+            <strong class="amount">₱{{ order.totalAmount.toFixed(2) }}</strong>
+          </div>
+
+          <div class="meta-row">
+            <span class="badge" [ngClass]="'badge--' + statusKey(order)">{{ order.status }}</span>
+            <span class="muted">{{ typeLabel(order.orderType) }} • {{ order.items.length }} item(s)</span>
+          </div>
+
+          <ul class="preview" *ngIf="order.items.length > 0">
+            <li *ngFor="let line of order.items">{{ line.quantity }} × {{ line.name }}</li>
+          </ul>
+
+          <button type="button" class="btn btn-sm btn-outline">
+            {{ isCompleted(order) ? 'View receipt' : 'View details' }}
+          </button>
+        </article>
+      </div>
+    </div>
+  </ng-container>
+</section>
